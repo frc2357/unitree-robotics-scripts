@@ -1271,6 +1271,7 @@ robot-preinstalled = [
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
     { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "opencv-python" },
+    { name = "unitree-sdk2py" },
 ]
 
 [package.metadata]
@@ -1284,5 +1285,27 @@ dev = [
 robot-preinstalled = [
     { name = "cyclonedds", specifier = "==0.10.2" },
     { name = "numpy", specifier = ">=1.20.0" },
+    { name = "opencv-python" },
+    { name = "unitree-sdk2py", editable = "../unitree_sdk2_python" },
+]
+
+[[package]]
+name = "unitree-sdk2py"
+version = "1.0.1"
+source = { editable = "../unitree_sdk2_python" }
+dependencies = [
+    { name = "cyclonedds" },
+    { name = "numpy", version = "1.24.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.9'" },
+    { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
+    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
+    { name = "numpy", version = "2.5.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "opencv-python" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "cyclonedds", specifier = "==0.10.2" },
+    { name = "numpy" },
     { name = "opencv-python" },
 ]
