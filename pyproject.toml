@@ -1,0 +1,31 @@
+[build-system] 
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "unitree-robot-scripts"
+version = "0.1.0"
+readme = "README.md"
+requires-python = ">=3.8"
+
+[dependency-groups]
+robot-preinstalled = [
+    "cyclonedds==0.10.2", # Required DDS middleware for unitree\_sdk2\_python
+    "numpy>=1.20.0", 
+    "opencv-python",
+    "unitree-sdk2py",
+] 
+
+dev = [
+    "mypy>=1.14.1",
+    "pytest>=8.3.5",
+    "ruff>=0.17.1",
+]
+
+[tool.uv.sources]
+unitree-sdk2py = { path = "../unitree_sdk2_python", editable = true }
+
+[tool.mypy]
+exclude = [
+    '^devops/verify_sdk.*\.py$'
+]
