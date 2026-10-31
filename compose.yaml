@@ -1,0 +1,15 @@
+services:
+  go2_env:
+    build: .
+    container_name: go2_ros2_env
+    stdin_open: true # Equivalent to -i
+    tty: true        # Equivalent to -t
+    ports:
+      - "8765:8765"  # Foxglove WebSocket
+    volumes:
+      # Maps your local 'src' folder into the container for hot-reloading
+      - ./onboard_scripts:/root/ros2_ws/src
+    # devices:
+      # Linux only: Maps the physical USB port into the container
+      # - "/dev/ttyUSB0:/dev/ttyUSB0"
+    command: ros2 run foxglove_bridge foxglove_bridge # start foglove automatically

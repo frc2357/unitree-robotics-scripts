@@ -81,3 +81,13 @@ The script performs a 3-step diagnostic check:
 1. **Dependency Validation**: Checks availability of `numpy`, `cyclonedds`, and `opencv-python`.
 2. **SDK Package Import**: Confirms `unitree_sdk2py` import from `../unitree_sdk2_python` and resolves IDL telemetry structures (`LowState_`).
 3. **DDS Channel Initialization**: Tests binding on the platform loopback interface (`lo0` on macOS, `lo` on Linux, `127.0.0.1` on Windows).
+
+## 6. Installing PodMan
+
+1. Install (here)[https://podman.io]
+2. Run `podman machine init`
+3. Run `podman machine start` to start the VM service. You will have to do this everytime you want to run containers
+4. Install docker compose: `brew intall docker-compose`
+5. Build the image and run the compose to simulate a ros2 OS running a foxglove bridge
+6. We mount onboard_scripts into the container so we can live edit code, and restart it from within the container
+7. Connect to the foxglove server in app.foxglove.dev
