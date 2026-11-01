@@ -1,7 +1,7 @@
 services:
-  go2_env:
+  ros2:
     build: .
-    container_name: go2_ros2_env
+    container_name: ros2
     stdin_open: true # Equivalent to -i
     tty: true        # Equivalent to -t
     ports:
