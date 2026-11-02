@@ -1,0 +1,14 @@
+services:
+  ros2_ros2bridge:
+    build: 
+      context: .
+      dockerfile: Dockerfile.ros2bridge
+    container_name: ros2_ros2bridge
+    volumes:
+      # Maps your local scripts into the container for live editing
+      - ./onboard_scripts:/root/ros2_ws/src
+    ports:
+      # Exposes the rosbridge websocket port to your Mac and local network
+      - "0.0.0.0:9090:9090"
+    stdin_open: true # Keeps the container receptive to interactive commands
+    tty: true        # Allocates a virtual terminal

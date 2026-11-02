@@ -1,7 +1,9 @@
 services:
-  ros2:
-    build: .
-    container_name: ros2
+  ros2_foxglove:
+    build: 
+      context: .
+      dockerfile: Dockerfile.foxglove
+    container_name: ros2_foxglove
     stdin_open: true # Equivalent to -i
     tty: true        # Equivalent to -t
     ports:

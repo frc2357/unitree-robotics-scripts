@@ -109,7 +109,7 @@ The script performs a 3-step diagnostic check:
 
 5. **Build and Launch the Environment:** Spin up the container to simulate the ROS 2 OS and start the Foxglove bridge. Run this in the directory containing your `docker-compose.yml`:
    ```bash
-   docker-compose up --build -d
+   docker-compose up -f compose.foxglove.yaml --build -d
    ```
 
 6. **Live Code Editing:** The `onboard_scripts` directory is mounted into the container as a volume. This allows you to edit Python files natively in your Mac/Windows IDE and execute the updated scripts immediately inside the container without needing to rebuild the image.
@@ -119,11 +119,13 @@ The script performs a 3-step diagnostic check:
 8. **Remote into the Container:** To execute your Python scripts or run ROS 2 commands manually, open a new terminal window and launch an interactive shell inside the running environment:
    ```bash
    # Open a bash shell inside the container
-   podman exec -it ros2 bash
+   podman exec -it ros2_foxglove bash
    
    # Run your test script from the mounted volume
    python3 onboard_scripts/heartbeat.py
    ```
+
+9. **Using Ros2Bridge**: The above steps can be used to also run the ros2bridge container, just replace `foxglove` with `ros2bridge`
 
 > **Note on Dependencies (`rclpy`):** 
 > The `heartbeat.py` test script uses `rclpy` to publish data to ROS 2 topics. Because `rclpy` relies on Linux-specific C++ binaries, it is not available on PyPI and cannot be installed directly on macOS or Windows. Executing the scripts inside this container ensures the system-level `rclpy` package resolves correctly.
