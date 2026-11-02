@@ -31,8 +31,9 @@ def check_dependencies():
     # NumPy
     try:
         import numpy as np
+
         print(f"✓ numpy version: {np.__version__}")
-    except Exception: # noqa
+    except Exception:  # noqa
         print("✗ Failed to import numpy:")
         traceback.print_exc()
         return False
@@ -40,7 +41,7 @@ def check_dependencies():
     # CycloneDDS
     try:
         print("✓ cyclonedds C-extension available.")
-    except Exception: # noqa
+    except Exception:  # noqa
         print("✗ Failed to import cyclonedds:")
         traceback.print_exc()
         return False
@@ -48,8 +49,9 @@ def check_dependencies():
     # OpenCV (optional)
     try:
         import cv2
+
         print(f"✓ opencv-python version: {cv2.__version__}")
-    except Exception: # noqa
+    except Exception:  # noqa
         print("ℹ opencv-python not installed (optional).")
 
     return True
@@ -61,8 +63,11 @@ def check_sdk_imports():
     # Base package
     try:
         import unitree_sdk2py
-        print(f"✓ unitree_sdk2py package found at: {getattr(unitree_sdk2py, '__file__', 'unknown')}")
-    except Exception: # noqa
+
+        print(
+            f"✓ unitree_sdk2py package found at: {getattr(unitree_sdk2py, '__file__', 'unknown')}"
+        )
+    except Exception:  # noqa
         print("✗ Failed to import base unitree_sdk2py package:")
         traceback.print_exc()
         return False, None
@@ -71,6 +76,7 @@ def check_sdk_imports():
     channel_init_func = None
     try:
         import unitree_sdk2py.core.channel as channel_mod
+
         symbols = dir(channel_mod)
         print(f"ℹ Available symbols in unitree_sdk2py.core.channel: {symbols}")
 
@@ -79,16 +85,22 @@ def check_sdk_imports():
             print("✓ Found 'ChannelFactoryInitialize' in unitree_sdk2py.core.channel.")
         elif "ChannelFactoryBuilder" in symbols:
             builder_cls = channel_mod.ChannelFactoryBuilder
-            channel_init_func = lambda domain_id, iface: builder_cls().Init(domain_id, iface)
+            channel_init_func = lambda domain_id, iface: builder_cls().Init(
+                domain_id, iface
+            )
             print("✓ Found 'ChannelFactoryBuilder' in unitree_sdk2py.core.channel.")
         elif "ChannelFactory" in symbols:
             factory_cls = channel_mod.ChannelFactory
-            channel_init_func = lambda domain_id, iface: factory_cls().Init(domain_id, iface)
+            channel_init_func = lambda domain_id, iface: factory_cls().Init(
+                domain_id, iface
+            )
             print("✓ Found 'ChannelFactory' in unitree_sdk2py.core.channel.")
         else:
-            print("✗ Could not find a ChannelFactory initialization function in unitree_sdk2py.core.channel.")
+            print(
+                "✗ Could not find a ChannelFactory initialization function in unitree_sdk2py.core.channel."
+            )
             return False, None
-    except Exception: # noqa
+    except Exception:  # noqa
         print("✗ Error inspecting unitree_sdk2py.core.channel:")
         traceback.print_exc()
         return False, None
@@ -105,9 +117,11 @@ def check_sdk_imports():
         try:
             mod = __import__(mod_path, fromlist=[cls_name])
             low_state_cls = getattr(mod, cls_name)
-            print(f"✓ Telemetry message structure '{cls_name}' imported from '{mod_path}'.")
+            print(
+                f"✓ Telemetry message structure '{cls_name}' imported from '{mod_path}'."
+            )
             break
-        except Exception: # noqa
+        except Exception:  # noqa
             pass
 
     if low_state_cls is None:
@@ -120,11 +134,11 @@ def check_sdk_imports():
 def get_default_interface():
     """Detect default loopback interface based on OS."""
     system = platform.system()
-    if system == "Darwin":     # macOS
+    if system == "Darwin":  # macOS
         return "lo0"
     elif system == "Windows":  # Windows
         return "127.0.0.1"
-    return "lo"                # Linux / default
+    return "lo"  # Linux / default
 
 
 def check_dds_channel(channel_init_func, user_interface):
@@ -157,7 +171,7 @@ def check_dds_channel(channel_init_func, user_interface):
             channel_init_func(0, iface)
             print(f"✓ ChannelFactory initialized successfully on interface {label}.")
             return True
-        except Exception as e: # noqa
+        except Exception as e:  # noqa
             print(f"  └─ Interface '{iface}' failed: {e}")
 
     print("\n✗ DDS channel initialization failed on all attempted interfaces.")
@@ -169,7 +183,7 @@ def check_dds_channel(channel_init_func, user_interface):
     print(" 2. When connected to the robot, pass your active network interface:")
     print("    - Linux:   uv run python verify_sdk.py eth0 (or enp2s0)")
     print("    - Mac:     uv run python verify_sdk.py en0")
-    print("    - Windows: uv run python verify_sdk.py \"Ethernet\" (or \"Wi-Fi\")")
+    print('    - Windows: uv run python verify_sdk.py "Ethernet" (or "Wi-Fi")')
     print(" 3. View available interfaces using:")
     print("    - Mac/Linux: ifconfig or ip addr")
     print("    - Windows:   ipconfig")
@@ -179,7 +193,9 @@ def check_dds_channel(channel_init_func, user_interface):
 def main():
     system = platform.system()
     print("==========================================")
-    print(f" Environment Validation: Checking Unitree SDK and Required Dependencies ({system})")
+    print(
+        f" Environment Validation: Checking Unitree SDK and Required Dependencies ({system})"
+    )
     print("==========================================")
 
     user_interface = sys.argv[1] if len(sys.argv) > 1 else None
@@ -192,7 +208,9 @@ def main():
     if deps_ok and sdk_ok and dds_ok:
         print("🎉 SUCCESS: All checks passed! Your Unitree SDK setup is fully working.")
     else:
-        print("❌ ISSUES DETECTED: Review the log above to fix the interface parameter.")
+        print(
+            "❌ ISSUES DETECTED: Review the log above to fix the interface parameter."
+        )
         sys.exit(1)
 
 

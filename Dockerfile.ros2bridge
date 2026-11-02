@@ -1,0 +1,17 @@
+FROM ros:humble-ros-base
+
+# Install rosbridge suite and basic utilities
+RUN apt-get update && apt-get install -y \
+    ros-humble-rosbridge-suite \
+    python3-pip \
+    nano \
+    && rm -rf /var/lib/apt/lists/*
+
+# Automatically source ROS 2 for any interactive shells (podman exec)
+RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc
+
+# Set the default working directory
+WORKDIR /root/ros2_ws
+
+# Launch the rosbridge websocket server automatically
+CMD ["/bin/bash", "-c", "source /opt/ros/humble/setup.bash && ros2 launch rosbridge_server rosbridge_websocket_launch.xml address:=0.0.0.0"]
