@@ -1,0 +1,51 @@
+FROM --platform=linux/amd64 ubuntu:20.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 1. Install build tools and 32-bit dependencies required by TI tools
+RUN dpkg --add-architecture i386 && \
+    apt-get update && apt-get install -y \
+    build-essential \
+    wget \
+    git \
+    make \
+    unzip \
+    libc6:i386 \
+    libncurses5:i386 \
+    libstdc++6:i386 \
+    libusb-0.1-4 \
+    python3 \
+    dos2unix \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /opt/ti
+
+# 2. Download and install mmWave SDK and TI Compilers directly
+RUN wget -q https://dr-download.ti.com/software-development/software-development-kit-sdk/MD-PIrUeCYr3X/03.06.02.00-LTS/mmwave_sdk_03_06_02_00-LTS-Linux-x86-Install.bin && \
+    wget -q https://software-dl.ti.com/codegen/esd/cgt_public_sw/TMS470/16.9.6.LTS/ti_cgt_tms470_16.9.6.LTS_linux_installer_x86.bin && \
+    wget -q https://software-dl.ti.com/codegen/esd/cgt_public_sw/C6000/8.3.3/ti_cgt_c6000_8.3.3_linux_installer_x86.bin && \
+    chmod +x *.bin && \
+    ./mmwave_sdk_03_06_02_00-LTS-Linux-x86-Install.bin --mode unattended --prefix /opt/ti && \
+    ./ti_cgt_tms470_16.9.6.LTS_linux_installer_x86.bin --mode unattended --prefix /opt/ti && \
+    ./ti_cgt_c6000_8.3.3_linux_installer_x86.bin --mode unattended --prefix /opt/ti && \
+    rm *.bin
+
+# 3. Copy and extract the local Radar Toolbox zip from your 'sdks' folder
+COPY sdks/radar_toolbox_4_20_00_07.zip /opt/ti/radar_toolbox.zip
+RUN unzip -q radar_toolbox.zip -d /opt/ti/ && \
+    rm radar_toolbox.zip
+
+# 4. Set Environment Variables for the build system
+ENV MMWAVE_SDK_INSTALL_PATH=/opt/ti/mmwave_sdk_03_06_02_00-LTS
+ENV R4F_COMPILER_PATH=/opt/ti/ti-cgt-arm_16.9.6.LTS
+ENV C674_COMPILER_PATH=/opt/ti/ti-cgt-c6000_8.3.3
+ENV BIOS_INSTALL_PATH=${MMWAVE_SDK_INSTALL_PATH}/bios_6_73_01_01
+ENV XDC_INSTALL_PATH=${BIOS_INSTALL_PATH}/xdctools_3_50_08_24_core
+
+# Add TI tools to the system PATH
+ENV PATH="${R4F_COMPILER_PATH}/bin:${C674_COMPILER_PATH}/bin:${XDC_INSTALL_PATH}:${PATH}"
+
+# Default working directory ready for compiling labs
+WORKDIR /opt/ti/radar_toolbox_4_20_00_07
+
+CMD ["/bin/bash"]
