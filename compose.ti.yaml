@@ -1,0 +1,32 @@
+# TI AWR6843AOP build environment.
+#
+#   podman -c qemu-machine compose -f compose.ti.yaml up -d      # start (builds image ONLY if it doesn't exist yet)
+#   podman -c qemu-machine compose -f compose.ti.yaml exec ti build_3d_people_tracking
+#   podman -c qemu-machine compose -f compose.ti.yaml exec ti bash
+#   podman -c qemu-machine compose -f compose.ti.yaml down
+#
+# Rebuild the image (~25 min) only when Dockerfile.sdk changes:  ... compose -f compose.ti.yaml build
+# Everything you edit day to day is bind-mounted, so none of it needs a rebuild.
+services:
+  ti:
+    image: ti-radar-env:4.20
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile.sdk
+    container_name: ti-radar-env
+    working_dir: /workspace
+    # Stay running so `exec` is instant (no container start-up cost per build).
+    command: ["sleep", "infinity"]
+    stdin_open: true
+    tty: true
+    environment:
+      TOOLBOX_DIR: /toolbox
+      OUT_DIR: /workspace/out/3d_people_tracking
+    volumes:
+      # Radar Toolbox source - edit on the Mac, build in the container. Override with TOOLBOX_DIR=/path
+      - ${TOOLBOX_DIR:-${HOME}/ti/radar_toolbox_4_20_00_07}:/toolbox
+      # Build script is mounted over the copy baked into the image, so editing it needs no rebuild.
+      - ./ti_awr6843aop_evm/build_3d_people_tracking.sh:/usr/local/bin/build_3d_people_tracking:ro
+      # Build output (.bin, objects, configPkg). Persists between runs, so XDC configuration is reused.
+      - ./ti_awr6843aop_evm/out:/workspace/out

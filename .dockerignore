@@ -1,0 +1,6 @@
+.venv
+.git
+sdks
+*.egg-info
+__pycache__
+ti_awr6843aop_evm/out

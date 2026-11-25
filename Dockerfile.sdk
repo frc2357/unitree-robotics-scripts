@@ -1,54 +1,55 @@
+# Build environment for the TI AWR6843AOPEVM (mmWave SDK 3.6.2 LTS + Radar Toolbox 4.20 examples).
+#
+# TI's mmWave SDK / compilers are 32-bit x86 Linux (or Windows) only, so on Apple silicon this
+# runs under qemu-user emulation (podman machine / Docker Desktop with QEMU, NOT Rosetta -
+# Rosetta cannot run 32-bit binaries). The installers are slow under emulation (~20 min total).
+#
+# Build:  podman -c qemu-machine build --platform linux/amd64 -t ti-radar-env:4.20 -f Dockerfile.sdk .
+# Needs a podman machine with >= 4 GB RAM (6 GB recommended).
+# Use:    see _documentation/workingWithTIBoard.md
 FROM --platform=linux/amd64 ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 1. Install build tools and 32-bit dependencies required by TI tools
-RUN dpkg --add-architecture i386 && \
-    apt-get update && apt-get install -y \
-    build-essential \
-    wget \
-    git \
-    make \
-    unzip \
-    libc6:i386 \
-    libncurses5:i386 \
-    libstdc++6:i386 \
-    libusb-0.1-4 \
-    python3 \
-    dos2unix \
+# i386 libs: required to even start the 32-bit TI installers/compilers (without them the installer
+#            exits 127 with no output).
+# mono-runtime: the SDK's out2rprc image tool only ships as a Windows .NET .exe.
+RUN dpkg --add-architecture i386 && apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates wget make perl python3 unzip file git build-essential dos2unix \
+    mono-runtime \
+    libc6:i386 libstdc++6:i386 libx11-6:i386 zlib1g:i386 libncurses5:i386 libtinfo5:i386 \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /opt/ti
+WORKDIR /tmp/ti_setup
 
-# 2. Download and install mmWave SDK and TI Compilers directly
-RUN wget --progress=bar:force:noscroll https://dr-download.ti.com/software-development/software-development-kit-sdk/MD-PIrUeCYr3X/03.06.02.00-LTS/mmwave_sdk_03_06_02_00-LTS-Linux-x86-Install.bin && \
-    wget --progress=bar:force:noscroll https://software-dl.ti.com/codegen/esd/cgt_public_sw/TMS470/16.9.6.LTS/ti_cgt_tms470_16.9.6.LTS_linux_installer_x86.bin && \
-    wget --progress=bar:force:noscroll https://software-dl.ti.com/codegen/esd/cgt_public_sw/C6000/8.3.3/ti_cgt_c6000_8.3.3_linux_installer_x86.bin && \
-    chmod +x *.bin && \
-    echo "Installing mmWave SDK (this takes a few minutes under emulation)..." && \
-    ./mmwave_sdk_03_06_02_00-LTS-Linux-x86-Install.bin --mode unattended --prefix /opt/ti && \
-    echo "Installing ARM Compiler..." && \
-    ./ti_cgt_tms470_16.9.6.LTS_linux_installer_x86.bin --mode unattended --prefix /opt/ti && \
-    echo "Installing DSP Compiler..." && \
-    ./ti_cgt_c6000_8.3.3_linux_installer_x86.bin --mode unattended --prefix /opt/ti && \
-    rm *.bin
+# mmWave SDK 3.6.2 LTS. This one installer also lays down SYS/BIOS, XDCtools, DSPLIB/MATHLIB,
+# and the ARM R4F compiler (ti-cgt-arm_16.9.6.LTS) under /opt/ti.
+RUN wget -nv -O sdk.bin https://dr-download.ti.com/software-development/software-development-kit-sdk/MD-PIrUeCYr3X/03.06.02.00-LTS/mmwave_sdk_03_06_02_00-LTS-Linux-x86-Install.bin \
+    && chmod +x sdk.bin \
+    && ./sdk.bin --mode unattended --prefix /opt/ti \
+    && rm -f sdk.bin
 
-# 3. Copy and extract the local Radar Toolbox zip from your 'sdks' folder
-COPY sdks/radar_toolbox_4_20_00_07.zip /opt/ti/radar_toolbox.zip
-RUN unzip -q radar_toolbox.zip -d /opt/ti/ && \
-    rm radar_toolbox.zip
+# The C674x DSP compiler is NOT bundled with the SDK installer.
+RUN wget -nv -O c6000.bin https://downloads.ti.com/codegen/esd/cgt_public_sw/C6000/8.3.3/ti_cgt_c6000_8.3.3_linux_installer_x86.bin \
+    && chmod +x c6000.bin \
+    && ./c6000.bin --mode unattended --unattendedmodeui none --prefix /opt/ti \
+    && rm -f c6000.bin
 
-# 4. Set Environment Variables for the build system
-ENV MMWAVE_SDK_INSTALL_PATH=/opt/ti/mmwave_sdk_03_06_02_00-LTS
-ENV R4F_COMPILER_PATH=/opt/ti/ti-cgt-arm_16.9.6.LTS
-ENV C674_COMPILER_PATH=/opt/ti/ti-cgt-c6000_8.3.3
-ENV BIOS_INSTALL_PATH=${MMWAVE_SDK_INSTALL_PATH}/bios_6_73_01_01
-ENV XDC_INSTALL_PATH=${BIOS_INSTALL_PATH}/xdctools_3_50_08_24_core
+WORKDIR /workspace
 
-# Add TI tools to the system PATH
-ENV PATH="${R4F_COMPILER_PATH}/bin:${C674_COMPILER_PATH}/bin:${XDC_INSTALL_PATH}:${PATH}"
+# Env for the SDK's own makefiles (setenv.mak defaults the tools dir to /opt/ti).
+# Note MMWAVE_SDK_INSTALL_PATH must point at .../packages.
+ENV MMWAVE_SDK_TOOLS_INSTALL_PATH=/opt/ti \
+    MMWAVE_SDK_INSTALL_PATH=/opt/ti/mmwave_sdk_03_06_02_00-LTS/packages \
+    R4F_CODEGEN_INSTALL_PATH=/opt/ti/ti-cgt-arm_16.9.6.LTS \
+    C674_CODEGEN_INSTALL_PATH=/opt/ti/ti-cgt-c6000_8.3.3 \
+    XDC_INSTALL_PATH=/opt/ti/xdctools_3_50_08_24_core \
+    BIOS_INSTALL_PATH=/opt/ti/bios_6_73_01_01/packages \
+    DOWNLOAD_FROM_CCS=yes
 
-# Default working directory ready for compiling labs
-WORKDIR /opt/ti/radar_toolbox_4_20_00_07
+# Radar Toolbox is bind-mounted at /toolbox, not copied in. Build script for the 3D people tracking demo:
+COPY ti_awr6843aop_evm/build_3d_people_tracking.sh /usr/local/bin/build_3d_people_tracking
+RUN chmod +x /usr/local/bin/build_3d_people_tracking
+ENV TOOLBOX_DIR=/toolbox
 
 CMD ["/bin/bash"]
