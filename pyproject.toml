@@ -7,6 +7,14 @@ name = "unitree-robot-scripts"
 version = "0.1.0"
 readme = "README.md"
 requires-python = ">=3.8"
+dependencies = [
+    "pyserial>=3.5",
+]
+
+# Scripts repo, not an installable library: skip setuptools' flat-layout auto-discovery
+# (it errors when several top-level script folders exist).
+[tool.setuptools]
+packages = []
 
 [dependency-groups]
 robot-preinstalled = [
